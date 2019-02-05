@@ -1,7 +1,13 @@
-def stage(x, y):
-    print("#"*(x+2))
+def gen_stage(x, y):
+    Stage = []
+    Stage.append(['#']*(x+2))
     for i in range(y):
-        print("#" + " "*x + "#")
-    print("#"*(x+2))
+        Stage.append(['#'] + [' ']*x + ['#'])
+    Stage.append(['#']*(x+2))
+    return Stage
 
-stage(20, 10)
+def output_stage(Stage):
+    for i in range(len(Stage)):
+        print(''.join(Stage[i]))
+
+output_stage(gen_stage(20, 10))
