@@ -1,7 +1,7 @@
 import random
 import pprint
 
-RootRoom = ((0,0),(200,200))
+RootRoom = ((0,0),(1600,900))
 
 def get_area(Room):
     XLen = Room[1][0] - Room[0][0]
@@ -44,15 +44,19 @@ def divide_room(ParentRoom, DivideLine):
     RightChildRoom = (RightChildRoomStart, RightChildRoomEnd)
     return [LeftChildRoom, RightChildRoom]
 
-def gen_room_hierarchy(RootRoom, BinaryRoomTree, RoomSize=5000, Tier=1):
-    BinaryRoomTree.append((Tier, RootRoom, get_area(RootRoom)))
+def gen_room_hierarchy(RootRoom, BinaryRoomTree, RoomSize=5000, Tier=0, BrosID=0):
+    Tier += 1
     if get_area(RootRoom) <= RoomSize:
-        return 
+        ID = len(BinaryRoomTree)
+        BinaryRoomTree.append((Tier, ID, RootRoom, get_area(RootRoom), BrosID))
+        return ID
     else:
-        Tier += 1
         ChildRooms = divide_room(RootRoom, define_divide_line(RootRoom, determine_long_side(RootRoom)))
-        gen_room_hierarchy(ChildRooms[0], BinaryRoomTree, RoomSize, Tier)
-        gen_room_hierarchy(ChildRooms[1], BinaryRoomTree, RoomSize, Tier)
+        RightChildID = gen_room_hierarchy(ChildRooms[1], BinaryRoomTree, RoomSize, Tier)
+        LeftChildID = gen_room_hierarchy(ChildRooms[0], BinaryRoomTree, RoomSize, Tier, RightChildID)
+    ID = len(BinaryRoomTree)
+    BinaryRoomTree.append((Tier, ID, RootRoom, get_area(RootRoom), (LeftChildID, RightChildID), BrosID))
+    return ID
 
 
 BinaryRoomTree = []
