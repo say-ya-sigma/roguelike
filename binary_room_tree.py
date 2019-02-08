@@ -1,7 +1,7 @@
 import random
 import pprint
 
-RootRoom = ((0,0),(1600,900))
+RootRoom = ((0,0),(320,240))
 
 def get_area(Room):
     XLen = Room[1][0] - Room[0][0]
@@ -40,26 +40,71 @@ def divide_room(ParentRoom, DivideLine):
         LeftChildRoomEnd = (ParentRoom[1][0], DivideLine[0])
         RightChildRoomStart = (ParentRoom[0][0], DivideLine[0])
     
+    CorridorStraight = (RightChildRoomStart, LeftChildRoomEnd)
     LeftChildRoom = (LeftChildRoomStart, LeftChildRoomEnd)
     RightChildRoom = (RightChildRoomStart, RightChildRoomEnd)
-    return [LeftChildRoom, RightChildRoom]
+    return [LeftChildRoom, RightChildRoom],CorridorStraight
 
-def gen_room_hierarchy(RootRoom, BinaryRoomTree, RoomSize=5000, Tier=0, BrosID=0):
+def gen_room_hierarchy(
+        RootRoom,
+        RoomFrameData,
+        RoomSize=5000,
+        Tier=0,
+        BrosID=0):
     Tier += 1
     if get_area(RootRoom) <= RoomSize:
-        ID = len(BinaryRoomTree)
-        BinaryRoomTree.append((Tier, ID, RootRoom, get_area(RootRoom), BrosID))
+        ID = len(RoomFrameData["BinaryRoomTree"])
+        RoomFrameData["BinaryRoomTree"].append({
+            "Tier":Tier,
+            "ID":ID,
+            "Room":RootRoom,
+            "Area":get_area(RootRoom),
+            "BrosID":BrosID})
+        RoomFrameData["TerminateRooms"].append({
+            "ID":ID,
+            "Room":RootRoom})
         return ID
     else:
-        ChildRooms = divide_room(RootRoom, define_divide_line(RootRoom, determine_long_side(RootRoom)))
-        RightChildID = gen_room_hierarchy(ChildRooms[1], BinaryRoomTree, RoomSize, Tier)
-        LeftChildID = gen_room_hierarchy(ChildRooms[0], BinaryRoomTree, RoomSize, Tier, RightChildID)
-    ID = len(BinaryRoomTree)
-    BinaryRoomTree.append((Tier, ID, RootRoom, get_area(RootRoom), (LeftChildID, RightChildID), BrosID))
+        ChildRooms, CorridorStraight = divide_room(
+                RootRoom,
+                define_divide_line(
+                    RootRoom,
+                    determine_long_side(
+                        RootRoom)))
+        RightChildID = gen_room_hierarchy(
+                ChildRooms[1],
+                RoomFrameData,
+                RoomSize,
+                Tier)
+        LeftChildID = gen_room_hierarchy(
+                ChildRooms[0],
+                RoomFrameData,
+                RoomSize,
+                Tier,
+                RightChildID)
+    ID = len(RoomFrameData["BinaryRoomTree"])
+    RoomFrameData["BinaryRoomTree"].append({
+        "Tier":Tier,
+        "ID":ID,
+        "Room":RootRoom,
+        "Area":get_area(RootRoom),
+        "ChildID":(LeftChildID, RightChildID),
+        "BrosID":BrosID})
+    RoomFrameData["CorridorStraights"].append(
+            CorridorStraight)
     return ID
 
+RoomFrameData = {
+    "BinaryRoomTree":[],
+    "TerminateRooms":[],
+    "CorridorStraights":[]
+}
+gen_room_hierarchy(RootRoom, RoomFrameData)
 
-BinaryRoomTree = []
-gen_room_hierarchy(RootRoom, BinaryRoomTree)
-
-pprint.pprint(sorted(BinaryRoomTree, key=lambda tup: tup[0]))
+pprint.pprint(
+        sorted(
+            RoomFrameData["BinaryRoomTree"],
+            key=lambda room: room["Tier"]))
+pprint.pprint(RoomFrameData["TerminateRooms"])
+print(len(RoomFrameData["TerminateRooms"]))
+pprint.pprint(RoomFrameData["CorridorStraights"])
