@@ -1,4 +1,5 @@
 import random
+import pprint
 
 RootRoom = ((0,0),(200,200))
 
@@ -43,13 +44,18 @@ def divide_room(ParentRoom, DivideLine):
     RightChildRoom = (RightChildRoomStart, RightChildRoomEnd)
     return [LeftChildRoom, RightChildRoom]
 
-def gen_room_hierarchy(RootRoom, RoomSize=5000):
-    print(RootRoom)
+def gen_room_hierarchy(RootRoom, BinaryRoomTree, RoomSize=5000, Tier=1):
+    BinaryRoomTree.append((Tier, RootRoom, get_area(RootRoom)))
     if get_area(RootRoom) <= RoomSize:
-        return
+        return 
     else:
+        Tier += 1
         ChildRooms = divide_room(RootRoom, define_divide_line(RootRoom, determine_long_side(RootRoom)))
-        gen_room_hierarchy(ChildRooms[0], RoomSize)
-        gen_room_hierarchy(ChildRooms[1], RoomSize)
+        gen_room_hierarchy(ChildRooms[0], BinaryRoomTree, RoomSize, Tier)
+        gen_room_hierarchy(ChildRooms[1], BinaryRoomTree, RoomSize, Tier)
 
-gen_room_hierarchy(RootRoom)
+
+BinaryRoomTree = []
+gen_room_hierarchy(RootRoom, BinaryRoomTree)
+
+pprint.pprint(sorted(BinaryRoomTree, key=lambda tup: tup[0]))
