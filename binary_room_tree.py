@@ -1,6 +1,12 @@
 import random
 
-RootRoom = ((0,0),(160,200))
+RootRoom = ((0,0),(200,200))
+
+def get_area(Room):
+    XLen = Room[1][0] - Room[0][0]
+    YLen = Room[1][1] - Room[0][1]
+    return XLen * YLen
+
 
 def determine_long_side(Room):
     XLen = Room[1][0] - Room[0][0]
@@ -13,9 +19,13 @@ def determine_long_side(Room):
 
     return LongSide
 
-def define_divide_line(LongSide):
-    Point = round(LongSide[0] * random.uniform(0.4,0.6))
+def define_divide_line(RootRoom, LongSide):
+    Offset = round(LongSide[0] * random.uniform(0.4,0.6))
     Axis = LongSide[1]
+    if Axis == 'X':
+        Point = RootRoom[0][0] + Offset
+    elif Axis == 'Y':
+        Point = RootRoom[0][1] + Offset
     return(Point, Axis)
 
 def divide_room(ParentRoom, DivideLine):
@@ -33,4 +43,13 @@ def divide_room(ParentRoom, DivideLine):
     RightChildRoom = (RightChildRoomStart, RightChildRoomEnd)
     return [LeftChildRoom, RightChildRoom]
 
-print(divide_room(RootRoom, define_divide_line(determine_long_side(RootRoom))))
+def gen_room_hierarchy(RootRoom, RoomSize=5000):
+    print(RootRoom)
+    if get_area(RootRoom) <= RoomSize:
+        return
+    else:
+        ChildRooms = divide_room(RootRoom, define_divide_line(RootRoom, determine_long_side(RootRoom)))
+        gen_room_hierarchy(ChildRooms[0], RoomSize)
+        gen_room_hierarchy(ChildRooms[1], RoomSize)
+
+gen_room_hierarchy(RootRoom)
