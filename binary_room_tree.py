@@ -1,6 +1,6 @@
 import random
 
-RootRoom = ((0,0),(200,200))
+RootRoom = ((0,0),(160,200))
 
 def determine_long_side(Room):
     XLen = Room[1][0] - Room[0][0]
@@ -18,4 +18,19 @@ def define_divide_line(LongSide):
     Axis = LongSide[1]
     return(Point, Axis)
 
-print(define_divide_line(determine_long_side(RootRoom)))
+def divide_room(ParentRoom, DivideLine):
+    LeftChildRoomStart = ParentRoom[0]
+    RightChildRoomEnd = ParentRoom[1]
+
+    if DivideLine[1] == 'X':
+        LeftChildRoomEnd = (DivideLine[0], ParentRoom[1][1])
+        RightChildRoomStart = (DivideLine[0], ParentRoom[0][1])
+    elif DivideLine[1] == 'Y':
+        LeftChildRoomEnd = (ParentRoom[1][0], DivideLine[0])
+        RightChildRoomStart = (ParentRoom[0][0], DivideLine[0])
+    
+    LeftChildRoom = (LeftChildRoomStart, LeftChildRoomEnd)
+    RightChildRoom = (RightChildRoomStart, RightChildRoomEnd)
+    return [LeftChildRoom, RightChildRoom]
+
+print(divide_room(RootRoom, define_divide_line(determine_long_side(RootRoom))))
