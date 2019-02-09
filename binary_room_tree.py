@@ -94,21 +94,20 @@ def gen_room_hierarchy(
             CorridorStraight)
     return ID
 
-def to_orientation_range_form(CorridorStraight):
+def to_level_form(CorridorStraight):
     Start, End = CorridorStraight
     if Start[0] == End[0]:
-        Orientation = 'X'
-        Level = Start[0]
+        Level = 'X',Start[0]
         Range = Start[1],End[1]
     elif Start[1] == End[1]:
-        Orientation = 'Y'
-        Level = Start[1]
+        Level = 'Y',Start[1]
         Range = Start[0],End[0]
 
-    return Orientation, Level, Range
+    return {"Level":Level,
+            "Range":Range}
 
 def associate_neighbor_room(CorridorStraight, TerminateRooms):
-    return to_orientation_range_form(CorridorStraight)
+     return to_level_form(CorridorStraight)
 
 RoomFrameData = {
     "BinaryRoomTree":[],
