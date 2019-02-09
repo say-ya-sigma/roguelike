@@ -90,12 +90,15 @@ def gen_room_hierarchy(
         "Area":get_area(RootRoom),
         "ChildID":(LeftChildID, RightChildID),
         "BrosID":BrosID})
-    RoomFrameData["CorridorStraights"].append(
-            CorridorStraight)
+    RoomFrameData["CorridorStraights"].append({
+            "ID":ID,
+            "Start":CorridorStraight[0],
+            "End": CorridorStraight[1]})
     return ID
 
 def to_level_form(CorridorStraight):
-    Start, End = CorridorStraight
+    Start = CorridorStraight["Start"]
+    End = CorridorStraight["End"]
     if Start[0] == End[0]:
         Level = 'X',Start[0]
         Range = Start[1],End[1]
@@ -103,11 +106,29 @@ def to_level_form(CorridorStraight):
         Level = 'Y',Start[1]
         Range = Start[0],End[0]
 
-    return {"Level":Level,
-            "Range":Range}
+    return Level, Range
+
+def neighbor_room(Level, Range, Room):
+    OnLevel = False
+    OutOfRange = True
+    for Point in Room["Room"]:
+        if Level[0] == 'X':
+            Cross = Point[0]
+            Straight = Point[1]
+        elif Level[0] == 'Y':
+            Cross = Point[1]
+            Straight = Point[0]
+
+        if Cross == Level[1]:
+            OnLevel = True
+        if Range[0] <= Straight <= Range[1]:
+            OutOfRange = False
+
+    return OnLevel and not OutOfRange
 
 def associate_neighbor_room(CorridorStraight, TerminateRooms):
-     return to_level_form(CorridorStraight)
+    Level, Range = to_level_form(CorridorStraight)
+    return {"ID":CorridorStraight["ID"], "RoomList":list(filter(lambda Room:neighbor_room(Level, Range, Room),TerminateRooms))}
 
 RoomFrameData = {
     "BinaryRoomTree":[],
@@ -129,3 +150,5 @@ pprint.pprint(
     list(map(lambda x:associate_neighbor_room(x,
     TerminateRooms=RoomFrameData["TerminateRooms"]
     ),RoomFrameData["CorridorStraights"])))
+
+print(neighbor_room(('Y', 80), (0, 110), {"ID":11, "Room":((0, 0), (60, 80))}))
