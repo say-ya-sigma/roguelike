@@ -216,6 +216,15 @@ gen_room_hierarchy(RootRoom, RoomFrameData)
 
 Corridors = RoomFrameData["Partitions"]
 
+
+CorridorRoomRelation = list(map(
+        lambda x:associate_neighbor_room_brt(
+            x,
+            BinaryRoomTree=RoomFrameData[
+                "BinaryRoomTree"]),
+        Corridors
+    ))
+
 pprint.pprint(
     RoomFrameData["BinaryRoomTree"],
     width=50)
@@ -228,14 +237,6 @@ pprint.pprint(
     RoomFrameData["Partitions"],
     width=50)
 
-pprint.pprint(
-    list(
-        map(
-            lambda x:associate_neighbor_room_brt(
-                x,
-                BinaryRoomTree=RoomFrameData[
-                    "BinaryRoomTree"]),
-            Corridors)),
-    width=50)
+pprint.pprint(CorridorRoomRelation,width=50)
 
 print(neighbor_room(('Y', 80), (0, 110), {"ID":11, "Room":((0, 0), (60, 80))}))
