@@ -1,7 +1,8 @@
 import random
 import pprint
+from functools import reduce
 
-RootRoom = ((0,0),(1920,1080))
+RootRoom = ((0,0),(480,320))
 
 def get_area(Room):
     XLen = Room[1][0] - Room[0][0]
@@ -49,7 +50,7 @@ def divide_room(ParentRoom, DivideLine):
                 ParentRoom[0][0],
                 DivideLine[0])
     
-    CorridorStraight = (
+    Partition = (
             RightChildRoomStart,
             LeftChildRoomEnd)
     LeftChildRoom = (
@@ -60,7 +61,7 @@ def divide_room(ParentRoom, DivideLine):
             RightChildRoomEnd)
     return ([LeftChildRoom,
             RightChildRoom],
-            CorridorStraight)
+            Partition)
 
 def gen_room_hierarchy(
         RootRoom,
@@ -72,16 +73,18 @@ def gen_room_hierarchy(
     if get_area(RootRoom) <= RoomSize:
         ID = len(RoomFrameData["BinaryRoomTree"])
         RoomFrameData["BinaryRoomTree"][str(ID)] = {
+            "ID":ID,
             "Tier":Tier,
             "Room":RootRoom,
             "Area":get_area(RootRoom),
             "BrosID":BrosID}
-        RoomFrameData["TerminateRooms"].append({
+        RoomFrameData["TerminateRooms"][str(ID)] = {
             "ID":ID,
-            "Room":RootRoom})
+            "Room":RootRoom,
+            "Wall":tuple([random.randint(2, round(min(RootRoom[1][0]-RootRoom[0][0],RootRoom[1][1]-RootRoom[0][1])*0.15)) for i in range(4)])}
         return ID
     else:
-        ChildRooms, CorridorStraight = divide_room(
+        ChildRooms, Partition = divide_room(
                 RootRoom,
                 define_divide_line(
                     RootRoom,
@@ -100,15 +103,16 @@ def gen_room_hierarchy(
                 RightChildID)
     ID = len(RoomFrameData["BinaryRoomTree"])
     RoomFrameData["BinaryRoomTree"][str(ID)] = {
+        "ID":ID,
         "Tier":Tier,
         "Room":RootRoom,
         "Area":get_area(RootRoom),
-        "ChildID":(LeftChildID, RightChildID),
+        "ChildID":{LeftChildID, RightChildID},
         "BrosID":BrosID}
-    RoomFrameData["CorridorStraights"].append({
+    RoomFrameData["Partitions"].append({
         "ID":ID,
-        "Start":CorridorStraight[0],
-        "End": CorridorStraight[1]})
+        "Start":Partition[0],
+        "End":Partition[1]})
     return ID
 
 def to_level_form(CorridorStraight):
@@ -151,42 +155,66 @@ def associate_neighbor_room(CorridorStraight, TerminateRooms):
                     Level,
                     Range,
                     Room),
-                TerminateRooms
+                TerminateRooms.values()
             )
         )
     }
 
-def listup_vaild_child(BinaryRoomTree, Parent):
-    pass
+def vaild_child(BinaryRoomTree, Parents):
+    return list(map(
+        lambda ChildID:BinaryRoomTree[str(ChildID)]
+        ,reduce(lambda x,y:x.union(y),map(
+            lambda ID:BinaryRoomTree[str(ID)]['ChildID'],
+            Parents
+        ))
+    ))
 
-def associate_neighbor_room_brt(CorridorStraight,  BinaryRoomTree):
+def associate_neighbor_room_brt(CorridorStraight, BinaryRoomTree):
     Level, Range = to_level_form(CorridorStraight)
-    VaildParents = CorridorStraight["ID"]
-    while(True):
-        VaildChildren = listup_vaild_child(
+    VaildParents = {CorridorStraight['ID']}
+    NeighborRoom = set()
+    while len(VaildParents) != 0:
+        VaildChildren = vaild_child(
             BinaryRoomTree,
             VaildParents)
-        VaildParents = list(
+        Neighbors = set(map(
+            lambda Neighbor:Neighbor['ID'],
+            filter(
+                lambda Room:neighbor_room(
+                    Level,
+                    Range,
+                    Room),
+                VaildChildren
+            )
+        ))
+        Parents = set(map(
+            lambda Parent:Parent['ID'],
             filter(
                 lambda Adult:'ChildID' in Adult,
-                list(filter(
-                    lambda Room:neighbor_room(
-                            Level,
-                            Range,
-                            Room),
-                    VaildChildren
-                ))
+                VaildChildren
             )
-        )
-        if len(VaildParents) == 0:
-            break
+        ))
+        VaildParents = Neighbors & Parents
+        VaildTerminates = Neighbors - VaildParents
+
+        NeighborRoom = NeighborRoom.union(VaildTerminates)
+    return {'ID':CorridorStraight['ID'],
+            'Rooms':NeighborRoom}
+
+def right_side(Level, Room):
+    return Room[0][0] == Level or Room[0][1] == Level
+
+def align_rooms(CorridorStraight, Rooms):
+    Level, Range = to_level_form(Corridor)
 
 RoomFrameData = {
     "BinaryRoomTree":{},
-    "TerminateRooms":[],
-    "CorridorStraights":[]
+    "TerminateRooms":{},
+    "Partitions":[]
 }
 gen_room_hierarchy(RootRoom, RoomFrameData)
+
+Corridors = RoomFrameData["Partitions"]
 
 pprint.pprint(
     RoomFrameData["BinaryRoomTree"],
@@ -197,17 +225,17 @@ pprint.pprint(
     width=50)
 print(len(RoomFrameData["TerminateRooms"]))
 pprint.pprint(
-    RoomFrameData["CorridorStraights"],
+    RoomFrameData["Partitions"],
     width=50)
 
 pprint.pprint(
     list(
         map(
-            lambda x:associate_neighbor_room(
+            lambda x:associate_neighbor_room_brt(
                 x,
-                TerminateRooms=RoomFrameData[
-                    "TerminateRooms"]),
-            RoomFrameData["CorridorStraights"])),
+                BinaryRoomTree=RoomFrameData[
+                    "BinaryRoomTree"]),
+            Corridors)),
     width=50)
 
-# print(neighbor_room(('Y', 80), (0, 110), {"ID":11, "Room":((0, 0), (60, 80))}))
+print(neighbor_room(('Y', 80), (0, 110), {"ID":11, "Room":((0, 0), (60, 80))}))
