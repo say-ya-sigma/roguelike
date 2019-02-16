@@ -207,6 +207,9 @@ def right_side(Level, Room):
 def align_rooms(CorridorStraight, Rooms):
     Level, Range = to_level_form(Corridor)
 
+def generate_path(RoomsOnStraight,Straights,BRT):
+    return RoomsOnStraight
+
 RoomFrameData = {
     'BinaryRoomTree':{},
     'TerminateRooms':{},
@@ -217,20 +220,27 @@ gen_room_hierarchy(RootRoom, RoomFrameData)
 Corridor = {
     'Straights':{},
     'RoomsOnStraights':[],
-    'Paths':{}
+    'Paths':[]
 }
 
 Corridor['Straights'] = RoomFrameData["Partitions"]
 
 
 Corridor['RoomsOnStraights'] = list(map(
-        lambda x:associate_neighbor_room_brt(
-            x),
-            BinaryRoomTree=RoomFrameData[
-                "BinaryRoomTree"]),
-        Corridor['Straights']
-    ))
+    lambda x:associate_neighbor_room_brt(
+        x,
+        BinaryRoomTree=RoomFrameData[
+            "BinaryRoomTree"]),
+    Corridor['Straights']
+))
 
+Corridor['Paths'] = list(map(
+    lambda x:generate_path(
+        x,
+        Straights = Corridor['Straights'],
+        BRT = RoomFrameData['BinaryRoomTree']),
+    Corridor['RoomsOnStraights']
+))
 
 
 pprint.pprint(
