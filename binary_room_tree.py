@@ -208,22 +208,30 @@ def align_rooms(CorridorStraight, Rooms):
     Level, Range = to_level_form(Corridor)
 
 RoomFrameData = {
-    "BinaryRoomTree":{},
-    "TerminateRooms":{},
-    "Partitions":[]
+    'BinaryRoomTree':{},
+    'TerminateRooms':{},
+    'Partitions':[]
 }
 gen_room_hierarchy(RootRoom, RoomFrameData)
 
-Corridors = RoomFrameData["Partitions"]
+Corridor = {
+    'Straights':{},
+    'RoomsOnStraights':[],
+    'Paths':{}
+}
+
+Corridor['Straights'] = RoomFrameData["Partitions"]
 
 
-CorridorRoomRelation = list(map(
+Corridor['RoomsOnStraights'] = list(map(
         lambda x:associate_neighbor_room_brt(
-            x,
+            x),
             BinaryRoomTree=RoomFrameData[
                 "BinaryRoomTree"]),
-        Corridors
+        Corridor['Straights']
     ))
+
+
 
 pprint.pprint(
     RoomFrameData["BinaryRoomTree"],
@@ -237,6 +245,6 @@ pprint.pprint(
     RoomFrameData["Partitions"],
     width=50)
 
-pprint.pprint(CorridorRoomRelation,width=50)
+pprint.pprint(Corridor['RoomsOnStraights'],width=50)
 
 print(neighbor_room(('Y', 80), (0, 110), {"ID":11, "Room":((0, 0), (60, 80))}))
